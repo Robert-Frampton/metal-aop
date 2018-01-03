@@ -118,6 +118,51 @@ describe('Ajax', function() {
 		assert.ok(addSpy.calledOnce);
 		assert.strictEqual(retVal, 4);
 	});
+
+	it('should track changes made to return value with subsequent changes made by AOP.alterReturn', function() {
+		const obj = new MyClass();
+
+		AOP.after(function() {
+			assert.strictEqual(AOP.currentRetVal, 3);
+
+			return AOP.alterReturn(22);
+		}, obj, 'add');
+		AOP.after(function() {
+			assert.strictEqual(AOP.currentRetVal, 22);
+
+			return AOP.alterReturn('now a string');
+		}, obj, 'add');
+		AOP.after(function() {
+			assert.strictEqual(AOP.currentRetVal, 'now a string');
+
+			return AOP.alterReturn(AOP.currentRetVal + ':');
+		}, obj, 'add');
+
+		const retVal = obj.add(1, 2);
+
+		assert.ok(addSpy.calledOnce);
+		assert.strictEqual(retVal, 'now a string:');
+	});
+
+	it('should track original return value when changes are made by AOP.alterReturn', function() {
+		const obj = new MyClass();
+
+		AOP.after(function() {
+			assert.strictEqual(AOP.currentRetVal, 3);
+
+			return AOP.alterReturn(22);
+		}, obj, 'add');
+		AOP.after(function() {
+			assert.strictEqual(AOP.currentRetVal, 22);
+
+			return AOP.alterReturn(AOP.originalRetVal);
+		}, obj, 'add');
+
+		const retVal = obj.add(1, 2);
+
+		assert.ok(addSpy.calledOnce);
+		assert.strictEqual(retVal, 3);
+	});
 });
 
 class MyClass {
