@@ -90,7 +90,7 @@ describe('Ajax', function() {
 		assert.ok(addSpy.notCalled);
 	});
 
-	it('should prevent wrapped function and all further subscribers from firing when AOP.halt is returned by listener', function() {
+	it('should prevent wrapped function and all further before subscribers from firing when AOP.halt is returned by listener', function() {
 		const obj = new MyClass();
 		const spy = sinon.spy();
 
@@ -102,6 +102,21 @@ describe('Ajax', function() {
 		const retVal = obj.add(1, 2);
 
 		assert.ok(addSpy.notCalled);
+		assert.ok(spy.notCalled);
+		assert.strictEqual(retVal, 'new value');
+	});
+
+	it('should prevent all further after subscribers from firing when AOP.halt is returned by listener', function() {
+		const obj = new MyClass();
+		const spy = sinon.spy();
+
+		AOP.after(function() {
+			return AOP.halt('new value');
+		}, obj, 'add');
+		AOP.after(spy, obj, 'add');
+
+		const retVal = obj.add(1, 2);
+
 		assert.ok(spy.notCalled);
 		assert.strictEqual(retVal, 'new value');
 	});
